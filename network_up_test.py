@@ -7,6 +7,7 @@ filename = "demofile.txt"
 separator = ","
 up_cnt = 0
 down_cnt = 0
+check_cnt = 0
 
 def ping():
     return os.system("ping -c 1 " + hostname)
@@ -25,7 +26,7 @@ def check_network():
 
 def print_summary():
   file = open(filename,"a")
-  file.write("------------------------\nUp: " + str(up_cnt) + "\nDown: " + str(down_cnt) + "\n")
+  file.write("------------------------\nUp: " + str(up_cnt) + " (" + str(up_cnt/check_cnt*100) + "%)\nDown: " + str(down_cnt) + " (" + str(down_cnt/check_cnt*100) + "%)\n")
   file.close()
 
 if __name__ == "__main__":
@@ -34,5 +35,6 @@ if __name__ == "__main__":
       up_cnt += 1
     else: 
       down_cnt += 1
+    check_cnt += 1
     time.sleep(1)
   print_summary()
