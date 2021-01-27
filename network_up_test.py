@@ -23,7 +23,9 @@ def print_summary():
 if __name__ == "__main__":
   with open(filename,"a") as csvfile:
     csv_writer = csv.writer(csvfile)
-    csv_writer.writerow(['date','gateway','wifi','extern'])
+
+    if os.stat(filename).st_size == 0:
+      csv_writer.writerow(['date','gateway','wifi','extern'])
     
     gateway_check = False
     wifi_check = False
