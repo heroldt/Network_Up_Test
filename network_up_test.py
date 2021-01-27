@@ -1,12 +1,12 @@
 import os
-import time
 import csv
 from datetime import datetime
 
+dt = datetime.now()
 hostname_gateway = "fritz.box"
 hostname_wifi = ""
 hostname_extern = "google.com"
-filename = "test1.csv"
+filename = "network_test_%i%i%i.csv" % (dt.year,dt.month,dt.day) 
 gateway_up_cnt = 0
 wifi_up_cnt = 0
 extern_up_cnt = 0
@@ -21,25 +21,23 @@ def print_summary():
   print("Extern: " + str(extern_up_cnt) + " (" + str(extern_up_cnt/check_cnt*100) + "%)")
 
 if __name__ == "__main__":
-  with open(filename,"w") as csvfile:
+  with open(filename,"a") as csvfile:
     csv_writer = csv.writer(csvfile)
     csv_writer.writerow(['date','gateway','wifi','extern'])
     
-    for i in range(0,5):
-      gateway_check = False
-      wifi_check = False
-      extern_check = False
-      if ping(hostname_gateway) == 0:
-        gateway_check = True
-        gateway_up_cnt += 1
-      if ping(hostname_wifi) == 0:
-        wifi_check = True
-        wifi_up_cnt += 1
-      if ping(hostname_extern) == 0:
-        extern_check = True
-        extern_up_cnt += 1
+    gateway_check = False
+    wifi_check = False
+    extern_check = False
+    if ping(hostname_gateway) == 0:
+      gateway_check = True
+      gateway_up_cnt += 1
+    if ping(hostname_wifi) == 0:
+      wifi_check = True
+      wifi_up_cnt += 1
+    if ping(hostname_extern) == 0:
+      extern_check = True
+      extern_up_cnt += 1
 
-      csv_writer.writerow([datetime.now(),gateway_check,wifi_check,extern_check])
+      csv_writer.writerow(["%i:%i:%i" % (dt.hour,dt.minute,dt.second),gateway_check,wifi_check,extern_check])
       check_cnt += 1
-      time.sleep(60)
   print_summary()
