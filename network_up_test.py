@@ -6,7 +6,7 @@ dt = datetime.now()
 hostname_gateway = "fritz.box"
 hostname_wifi = ""
 hostname_extern = "google.com"
-filename = "network_test_%i%i%i.csv" % (dt.year,dt.month,dt.day) 
+filename = "network_test_%04i%02i%02i.csv" % (dt.year,dt.month,dt.day) 
 gateway_up_cnt = 0
 wifi_up_cnt = 0
 extern_up_cnt = 0
@@ -40,6 +40,6 @@ if __name__ == "__main__":
       extern_check = True
       extern_up_cnt += 1
 
-      csv_writer.writerow(["%i:%i:%i" % (dt.hour,dt.minute,dt.second),gateway_check,wifi_check,extern_check])
+      csv_writer.writerow(["%02i:%02i:%02i" % (dt.hour,dt.minute,dt.second),gateway_check,wifi_check,extern_check])
       check_cnt += 1
   print_summary()
