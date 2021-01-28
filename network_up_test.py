@@ -1,13 +1,15 @@
 import os
 import csv
-from datetime import datetime
+from datetime import datetime, timedelta
 import requests
 
-dt = datetime.now()
+dt_today = datetime.now()
+dt_yesterday = dt_today - timedelta(1)
 hostname_gateway = "fritz.box"
 hostname_wifi = ""
 hostname_extern = "google.com"
-filename = "network_test_%04i%02i%02i.csv" % (dt.year,dt.month,dt.day) 
+filename_today = "network_test_%04i%02i%02i.csv" % (dt_today.year,dt_today.month,dt_today.day) 
+filename_yesterday = "network_test_%04i%02i%02i.csv" % (dt_yesterday.year,dt_yesterday.month,dt_yesterday.day) 
 gateway_up_cnt = 0
 wifi_up_cnt = 0
 extern_up_cnt = 0
@@ -25,10 +27,10 @@ def print_summary():
   print("Extern: %i (%.f%%)" %(extern_up_cnt,extern_up_cnt/check_cnt*100))
 
 def check_network():
-  with open(filename,"a") as csvfile:
+  with open(filename_today,"a") as csvfile:
     csv_writer = csv.writer(csvfile)
 
-    if os.stat(filename).st_size == 0:
+    if os.stat(filename_today).st_size == 0:
       csv_writer.writerow(['date','gateway','wifi','extern'])
     
     gateway_check = 'nOK'
@@ -41,28 +43,32 @@ def check_network():
     if ping(hostname_extern) == 0:
       extern_check = 'OK'
 
-      csv_writer.writerow(["%02i:%02i:%02i" % (dt.hour,dt.minute,dt.second),gateway_check,wifi_check,extern_check])
+      csv_writer.writerow(["%02i:%02i:%02i" % (dt_today.hour,dt_today.minute,dt_today.second),gateway_check,wifi_check,extern_check])
 
-def read_csv():
+def read_csv(filename):
   global gateway_up_cnt
   global wifi_up_cnt
   global extern_up_cnt
   global check_cnt
 
-  with open(filename,"r") as csvfile:
-    csv_reader = csv.reader(csvfile)
-    next(csv_reader) #skip first line (header)
-    for row in csv_reader:
-      if row[1] == 'OK':
-        gateway_up_cnt += 1
-      if row[2] == 'OK':
-        wifi_up_cnt += 1
-      if row[3] == 'OK':
-        extern_up_cnt += 1
-      check_cnt += 1
+  try:
+    with open(filename,"r") as csvfile:
+      csv_reader = csv.reader(csvfile)
+      next(csv_reader) #skip first line (header)
+      for row in csv_reader:
+        if row[1] == 'OK':
+          gateway_up_cnt += 1
+        if row[2] == 'OK':
+          wifi_up_cnt += 1
+        if row[3] == 'OK':
+          extern_up_cnt += 1
+        check_cnt += 1
+    return True
+  except IOError:
+    return False
 
 def get_daily_summary():
-  title_text = "Zusammenfassung für gestern %02i.%02i.%i:\n" %(dt.day,dt.month,dt.year)
+  title_text = "Zusammenfassung für gestern %02i.%02i.%i:\n" %(dt_yesterday.day,dt_yesterday.month,dt_yesterday.year)
   if check_cnt == gateway_up_cnt and check_cnt == wifi_up_cnt and check_cnt == extern_up_cnt:
     summary_text = "Gestern gab es keine Ausfälle!"
   else:
@@ -77,6 +83,7 @@ def send_message(message):
 
 if __name__ == "__main__":
   check_network()
-  read_csv()
+  read_csv(filename_today)
   print_summary()
-  send_message(get_daily_summary())
+  if True == read_csv(filename_yesterday):
+    send_message(get_daily_summary())
