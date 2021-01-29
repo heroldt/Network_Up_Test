@@ -5,11 +5,13 @@ import requests
 
 dt_today = datetime.now()
 dt_yesterday = dt_today - timedelta(1)
+date_today = "%04i%02i%02i" %(dt_today.year,dt_today.month,dt_today.day) 
 hostname_gateway = "fritz.box"
 hostname_wifi = ""
 hostname_extern = "google.com"
 filename_today = "network_test_%04i%02i%02i.csv" % (dt_today.year,dt_today.month,dt_today.day) 
-filename_yesterday = "network_test_%04i%02i%02i.csv" % (dt_yesterday.year,dt_yesterday.month,dt_yesterday.day) 
+filename_yesterday = "network_test_%04i%02i%02i.csv" % (dt_yesterday.year,dt_yesterday.month,dt_yesterday.day)
+filename_telegram_log = "telegram_log.csv" 
 gateway_up_cnt = 0
 wifi_up_cnt = 0
 extern_up_cnt = 0
@@ -31,7 +33,7 @@ def check_network():
     csv_writer = csv.writer(csvfile)
 
     if os.stat(filename_today).st_size == 0:
-      csv_writer.writerow(['date','gateway','wifi','extern'])
+      csv_writer.writerow(['time','gateway','wifi','extern'])
     
     gateway_check = 'nOK'
     wifi_check = 'nOK'
@@ -43,13 +45,18 @@ def check_network():
     if ping(hostname_extern) == 0:
       extern_check = 'OK'
 
-      csv_writer.writerow(["%02i:%02i:%02i" % (dt_today.hour,dt_today.minute,dt_today.second),gateway_check,wifi_check,extern_check])
+    csv_writer.writerow(["%02i:%02i:%02i" % (dt_today.hour,dt_today.minute,dt_today.second),gateway_check,wifi_check,extern_check])
 
 def read_csv(filename):
   global gateway_up_cnt
   global wifi_up_cnt
   global extern_up_cnt
   global check_cnt
+
+  gateway_up_cnt = 0
+  wifi_up_cnt = 0
+  extern_up_cnt = 0
+  check_cnt = 0
 
   try:
     with open(filename,"r") as csvfile:
@@ -79,11 +86,28 @@ def get_daily_summary():
 def send_message(message):
   send_text = 'https://api.telegram.org/bot' + bot_token + '/sendMessage?chat_id=' + bot_ID + '&parse_mode=Markdown&text=' + message
   response = requests.get(send_text)
+  set_telegram_log(filename_telegram_log)
   return response.json()
+
+def set_telegram_log(filename):
+  with open(filename,"a") as csvfile:
+    csv_writer = csv.writer(csvfile)
+    csv_writer.writerow([date_today,"%02i:%02i:%02i" %(dt_today.hour,dt_today.minute,dt_today.second)])
+
+def get_telegram_log(filename):
+  try:
+    with open(filename,"r") as csvfile:
+      csv_reader = csv.reader(csvfile)
+      for row in csv_reader:
+        if row[0] == date_today:
+          return True
+      return False
+  except:
+    return False
 
 if __name__ == "__main__":
   check_network()
   read_csv(filename_today)
   print_summary()
-  if True == read_csv(filename_yesterday):
+  if True == read_csv(filename_yesterday) and False == get_telegram_log(filename_telegram_log):
     send_message(get_daily_summary())
