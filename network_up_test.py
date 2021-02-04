@@ -71,7 +71,7 @@ def read_csv(filename):
           extern_up_cnt += 1
         check_cnt += 1
     return True
-  except IOError:
+  except:
     return False
 
 def get_daily_summary():
